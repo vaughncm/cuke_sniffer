@@ -67,7 +67,7 @@ module CukeSniffer
 
     # Boolean: Status of if the projects step definitions were cataloged for calls
     attr_accessor :cataloged
-
+    alias :cataloged? :cataloged
 
     # Does analysis against the passed features and step definition locations
     #
@@ -184,10 +184,6 @@ module CukeSniffer
       @improvement_list = @summary[:improvement_list]
     end
 
-    def cataloged?
-      @cataloged
-    end
-
     private
 
     def initialize_rule_targets(parameters)
@@ -216,11 +212,7 @@ module CukeSniffer
     end
 
     def initialize_catalog_status(parameters)
-      if parameters[:no_catalog] == true
-        @cataloged = false
-      else
-        @cataloged = true
-      end
+      @cataloged = true unless parameters[:no_catalog]
     end
 
     def evaluate_rules
@@ -242,7 +234,7 @@ module CukeSniffer
         @summary[:improvement_list][phrase] ||= 0
         @summary[:improvement_list][phrase] += @summary[symbol][:improvement_list][phrase]
       end
-      summary_object = CukeSniffer::SummaryHelper::load_summary_data(@summary[symbol])
+      CukeSniffer::SummaryHelper::load_summary_data(@summary[symbol])
     end
 
     def build_step_definitions(file_name)
@@ -254,7 +246,6 @@ module CukeSniffer
     end
 
     def build_file_list_for_extension_from_location(pattern_location, extension)
-      list = []
       unless pattern_location.nil?
         if File.file?(pattern_location)
           [pattern_location]
@@ -267,10 +258,10 @@ module CukeSniffer
     def build_objects_for_extension_from_location(pattern_location, extension, &block)
       file_list = build_file_list_for_extension_from_location(pattern_location, extension)
       list = []
-      file_list.each {|file_name|
+      file_list.each do |file_name|
         print '.'
         list << block.call(file_name)
-      }
+      end
       list.flatten
     end
 
@@ -290,7 +281,7 @@ module CukeSniffer
         end
         found_first_object = true if file_lines[counter] =~ regex
         code << file_lines[counter].strip
-        counter+=1
+        counter += 1
       end
       location = "#{file_name}:#{counter+1 -code.count}"
       object_list << cuke_sniffer_class.new(location, code) unless code.empty? or !found_first_object
